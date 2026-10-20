@@ -1,0 +1,23 @@
+{
+  "name": "gongdao-zhongkui",
+  "version": "1.0.0",
+  "description": "公道钟馗 - 六爻问卦（手势版）Android 封装工程",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android",
+    "open:android": "cap open android",
+    "preflight:release": "node scripts/release-preflight.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/share": "^8.0.3",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/hands": "^0.4.1675469240",
+    "cordova-plugin-purchase": "^13.18.0",
+    "sharp": "^0.35.5"
+  }
+}
