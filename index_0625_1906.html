@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta property="og:title" content="公道钟馗 - 六爻问卦">
+    <meta property="og:description" content="持正守道 · 决疑解惑。来体验赛博修仙与金钱演卦。">
+    <meta property="og:image" content="https://vesperawen.github.io/zhongkui-wendao/share.png">
+    
+    <title>公道钟馗 - 六爻问卦 (手势版)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        /* ================= 中式古典 & 道教 UI 美化 ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 14px; }
+        
+        body { 
+            font-family: 'LiSu', 'STKaiti', 'KaiTi', '华文楷体', serif; 
+            background-color: #0d1117; 
+            background-image: radial-gradient(circle at 50% 50%, rgba(26, 34, 51, 0.95) 0%, rgba(13, 17, 23, 0.98) 80%), url('底图.png');
+            background-size: cover; background-position: center center;
+            background-repeat: no-repeat; background-attachment: fixed;
+            min-height: 100vh; color: #e5d3b3; position: relative;
+            z-index: 0; overflow-x: hidden;
+            overscroll-behavior-y: none; -webkit-overflow-scrolling: touch;
+        }
+
+        body::before {
+            content: '☯\FE0E'; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); font-size: 60vh;
+            color: rgba(212, 175, 55, 0.03); z-index: -1; pointer-events: none;
+        }
+
+        /* 解决点击穿透和半山腰问题的关键护盾 */
+        #magicCanvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1; pointer-events: none; 
+        }
+
+        .page { display: none; padding: 1.43rem; padding-top: 5rem; padding-bottom: 7.14rem; }
+        .page.active { display: block; }
+        
+        header { 
+            position: fixed; top: 0; left: 0; right: 0; 
+            background: linear-gradient(to bottom, #111, rgba(13, 17, 23, 0.9)); 
+            border-bottom: 2px solid #5a0e0e; 
+            padding: calc(1rem + env(safe-area-inset-top)) 1.43rem 1rem;
+            display: flex; justify-content: space-between; align-items: center; 
+            z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            flex-wrap: wrap; gap: 10px; 
+        }
+        .logo { font-size: 1.3rem; font-weight: bold; color: #d4af37; letter-spacing: 0.1rem; flex-shrink: 0; }
+        .header-btn { 
+            background: transparent; border: 1px solid #d4af37; color: #d4af37; 
+            padding: 0.4rem 1rem; border-radius: 2px; font-size: 1rem; 
+            font-family: inherit; cursor: pointer; transition: all 0.3s; 
+        }
+        .header-btn:hover { background: rgba(212, 175, 55, 0.15); }
+
+        #homePage { text-align: center; padding-top: 10rem; }
+        .brand-title { font-size: 3.5rem; font-weight: bold; color: #d4af37; letter-spacing: 0.8rem; margin-bottom: 1rem; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 2px 4px 8px rgba(0,0,0,0.9); }
+        .brand-slogan { font-size: 1.2rem; color: #8b1d1d; letter-spacing: 0.4rem; margin-bottom: 4rem; font-weight: bold; }
+
+        .btn { 
+            display: block; width: 80%; max-width: 22rem; margin: 1.5rem auto; 
+            padding: 1rem 2rem; font-size: 1.3rem; border: none; border-radius: 4px; 
+            cursor: pointer; transition: all 0.3s; letter-spacing: 0.3rem; font-family: inherit; position: relative;
+        }
+        .btn-primary { background: linear-gradient(180deg, #8b1d1d 0%, #5a0e0e 100%); color: #f4e8c1; font-weight: bold; border: 1px solid #d4af37; box-shadow: 0 4px 15px rgba(139, 29, 29, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 29, 29, 0.6); border-color: #ffd700; }
+        .btn-gesture { background: linear-gradient(180deg, #163a4a 0%, #0a1f2b 100%); color: #8be0ff; font-weight: bold; border: 1px solid #4a90e2; box-shadow: 0 4px 15px rgba(22, 58, 74, 0.4); }
+        .btn-gesture:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4); }
+        .btn-secondary { background: rgba(0,0,0,0.5); border: 1px solid #d4af37; color: #d4af37; }
+        .btn-secondary:hover { background: rgba(212, 175, 55, 0.1); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); }
+
+        #drawPage { text-align: center; }
+        .tortoise-container { position: relative; width: 14.29rem; height: 14.29rem; margin: 2.14rem auto; cursor: pointer; }
+        .tortoise-shell { width: 100%; height: 100%; background: radial-gradient(circle at 50% 35%, #4a3018 0%, #2b1d0e 60%, #1a1108 100%); border-radius: 50% 50% 45% 45%; border: 2px solid #5c4022; box-shadow: inset 0 -1rem 2rem rgba(0,0,0,0.8), 0 1rem 2rem rgba(0,0,0,0.6), inset 0 0.5rem 1rem rgba(212, 175, 55, 0.15); transition: transform 0.1s; }
+        .tortoise-shell:hover { transform: scale(1.05); }
+        .tortoise-shell.shaking { animation: shake 0.15s infinite; }
+        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        .tortoise-pattern { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 75%; border: 2px solid rgba(212, 175, 55, 0.3); border-radius: 40% 40% 50% 50%; background-image: linear-gradient(45deg, transparent 48%, rgba(212,175,55,0.2) 49%, rgba(212,175,55,0.2) 51%, transparent 52%), linear-gradient(-45deg, transparent 48%, rgba(212,175,55,0.2) 49%, rgba(212,175,55,0.2) 51%, transparent 52%); background-size: 2rem 2rem; }
+        .tortoise-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1.5rem; height: 1.5rem; background: #8b1d1d; border: 1px solid #d4af37; border-radius: 50%; box-shadow: 0 0 15px rgba(212, 175, 55, 0.6); }
+
+        .coins-container-three { display: flex; justify-content: center; gap: 2.5rem; margin-top: 2rem; }
+        .coin { width: 4rem; height: 4rem; border-radius: 50%; background: radial-gradient(circle, #d4af37 0%, #aa7c11 80%, #6b4c05 100%); box-shadow: inset 0 -3px 6px rgba(0,0,0,0.6), 0 5px 10px rgba(0,0,0,0.5); position: relative; cursor: pointer; border: 2px solid #8b6508; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; }
+        .coin::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1.2rem; height: 1.2rem; background: #0d1117; border: 1px solid #5a3c00; box-shadow: inset 0 0 5px #000; }
+        .coin.throwing { animation: throwCoin 1.5s ease-out forwards; }
+        @keyframes throwCoin { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; } 50% { transform: translateY(-12rem) rotate(360deg) scale(1.2); opacity: 0.9; } 100% { transform: translateY(0) rotate(720deg) scale(1); opacity: 1; } }
+        
+        .result-row { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; }
+        .result-item { width: 3.5rem; height: 3.5rem; border-radius: 50%; background: rgba(0, 0, 0, 0.5); border: 2px solid #555; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; position: relative; }
+        .result-item.front { background: radial-gradient(circle, #d4af37 0%, #8b6508 100%); border-color: #ffd700; color: transparent; }
+        .result-item.front::after { content: ''; position: absolute; width: 1rem; height: 1rem; background: #0d1117; border: 1px solid #5a3c00; }
+        .result-item.back { background: radial-gradient(circle, #4a4a4a, #1a1a1a); border-color: #888; color: transparent; }
+        .result-item.back::after { content: '〇'; font-size: 1.2rem; color: #888; position: absolute; }
+
+        .hexagram-container { display: flex; flex-direction: column; gap: 0.6rem; padding: 1.5rem; background: linear-gradient(to right, rgba(20,25,35,0.9), rgba(30,35,45,0.9), rgba(20,25,35,0.9)); border-radius: 4px; border: 1px solid #d4af37; width: 22rem; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        .yao-row { display: flex; align-items: center; justify-content: center; gap: 1rem; width: 100%; height: 2rem; }
+        .yao-label { width: 3rem; text-align: right; font-size: 1rem; color: #a99a80; flex-shrink: 0; }
+        .yao-cell { display: flex; align-items: center; gap: 0.8rem; }
+        .yao-symbol { width: 8rem; height: 0.8rem; flex-shrink: 0; position: relative; }
+        .yao-symbol.yao-empty { background: rgba(255, 255, 255, 0.05); border-radius: 2px; }
+        .yao-symbol.yao-yang { background: #8b1d1d; border-radius: 2px; box-shadow: 0 0 5px rgba(139, 29, 29, 0.5); border: 1px solid #5a0e0e; }
+        .yao-symbol.yao-yin { display: flex; justify-content: space-between; background: transparent; }
+        .yao-symbol.yao-yin::before, .yao-symbol.yao-yin::after { content: ''; background: #1b628c; width: 3.5rem; height: 0.8rem; border-radius: 2px; box-shadow: 0 0 8px rgba(27, 98, 140, 0.7); border: 1px solid #0f3d59; }
+        .dong-indicator { width: 1.5rem; font-size: 1.2rem; font-family: 'SimSun', serif; flex-shrink: 0; opacity: 0; }
+        .dong-indicator.dong-yang { opacity: 1; color: #d4af37; text-shadow: 0 0 5px #000; }
+        .dong-indicator.dong-yin { opacity: 1; color: #8b1d1d; text-shadow: 0 0 5px #000; }
+
+        .back-btn { position: absolute; top: 5.5rem; left: 1.43rem; width: 3.5rem; height: 2.5rem; border-radius: 4px; background: rgba(0, 0, 0, 0.5); border: 1px solid #d4af37; color: #d4af37; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 101; }
+        .back-btn:hover { background: rgba(212, 175, 55, 0.2); }
+
+        .question-hint { background-color: rgba(20, 25, 35, 0.8); border: 1px solid #5a0e0e; border-radius: 4px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; position: relative; }
+        .hint-title { font-size: 1.2rem; font-weight: bold; color: #d4af37; margin-bottom: 0.5rem; letter-spacing: 2px; }
+        .hint-text { font-size: 1rem; color: #e5d3b3; line-height: 1.6; }
+        
+        .question-categories { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 1.5rem; justify-content: center; position: relative; }
+        .category-btn { padding: 0.5rem 1rem; border: 1px solid #6b4c05; background: rgba(0,0,0,0.6); color: #a99a80; border-radius: 2px; cursor: pointer; transition: all 0.3s; font-family: inherit; }
+        .category-btn.active { background: #8b1d1d; color: #f4e8c1; border-color: #d4af37; font-weight: bold; }
+        
+        .question-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; max-height: 18rem; overflow-y: auto; padding-right: 0.5rem; }
+        .question-list::-webkit-scrollbar { width: 6px; }
+        .question-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-left: 1px solid #333; }
+        .question-list::-webkit-scrollbar-thumb { background: #6b4c05; }
+
+        .question-item { padding: 1rem; background: rgba(255, 255, 255, 0.03); border-left: 3px solid transparent; border-bottom: 1px solid rgba(212, 175, 55, 0.1); cursor: pointer; transition: all 0.3s; text-align: left; color: #c9bda5; }
+        .question-item:hover { background: rgba(212, 175, 55, 0.05); }
+        .question-item.selected { border-left-color: #d4af37; background: rgba(139, 29, 29, 0.15); color: #d4af37; }
+        
+        .selected-question { display: none; padding: 1.2rem; background: rgba(13, 17, 23, 0.9); border: 1px solid #d4af37; border-radius: 2px; margin-bottom: 1.5rem; box-shadow: inset 0 0 10px rgba(212,175,55,0.1); }
+        .selected-question.show { display: block; }
+        .selected-label { font-size: 0.9rem; color: #a99a80; margin-bottom: 0.5rem; }
+        .selected-text { font-size: 1.2rem; color: #f4e8c1; font-weight: bold; letter-spacing: 1px; }
+
+        /* ================= 完美回填的 ResultPage 核心样式 ================= */
+        #resultPage { padding: 0; padding-top: 4.5rem; padding-bottom: 8.5rem; position: relative; }
+        .result-header { background: linear-gradient(to bottom, #111, rgba(13, 17, 23, 0.9)); border-bottom: 2px solid #5a0e0e; padding: 1rem; padding-left: 6rem; display: flex; align-items: center; gap: 1rem; }
+        .result-header .question-hint { background: transparent; border: none; padding: 0; flex: 1; margin: 0;}
+        
+        .main-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; padding: 1.5rem; }
+        .gua-card-pair { display: flex; gap: 1.5rem; background-color: rgba(20, 25, 35, 0.8); border: 1px solid #4a3018; padding: 1.5rem; flex: 1; min-width: 28rem; max-width: 38rem; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 2; position: relative; }
+        .card-placeholder { width: 10.5rem; height: 19rem; display: flex; align-items: center; justify-content: center; border-radius: 4px; z-index: 10; position: relative; }
+        .card-placeholder img { width: 115%; height: 105%; object-fit: cover; opacity: 0.85; filter: sepia(0.3); border-radius: 4px; }
+        .gua-card-pair .gua-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gua-header { display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-bottom: 1rem; }
+        .gua-label { font-size: 0.9rem; color: #000; background: #d4af37; padding: 0.2rem 0.6rem; border-radius: 2px; font-weight: bold; }
+        .gua-name { font-size: 1.8rem; font-weight: bold; color: #d4af37; letter-spacing: 4px; }
+        .gua-card-pair .hexagram-container { background: transparent; box-shadow: none; border: none; padding: 0; width: auto; gap: 0.4rem; }
+        .gua-card-pair .yao-symbol { width: 6rem; height: 0.5rem; }
+        .gua-card-pair .yao-symbol.yao-yin::before, .gua-card-pair .yao-symbol.yao-yin::after { width: 2.6rem; height: 0.5rem; }
+        .gua-text { text-align: center; font-size: 1.1rem; color: #c9bda5; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed #6b4c05; width: 100%; line-height: 1.6; }
+        
+        .dongyao-info { margin: 0 1.5rem 1.5rem 1.5rem; padding: 1rem; background: rgba(139, 29, 29, 0.1); border: 1px solid #8b1d1d; border-left: 4px solid #8b1d1d; text-align: center; font-size: 1.1rem; color: #d4af37; font-weight: bold; letter-spacing: 1px; z-index: 2; position: relative;}
+        .card-analysis-box { background: linear-gradient(135deg, rgba(20, 25, 35, 0.95), rgba(15, 20, 25, 0.95)); border: 1px solid #5a3c00; padding: 2rem; margin: 0 1.5rem 1.5rem; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.8); z-index: 2;}
+        .analysis-header { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #4a3018; }
+        .analysis-title { font-size: 1.4rem; font-weight: bold; color: #d4af37; letter-spacing: 0.2rem; }
+        .analysis-content { font-size: 1.1rem; color: #e5d3b3; line-height: 2; text-align: justify; }
+        
+        .result-buttons { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 2rem; background: linear-gradient(to top, #000, rgba(13,17,23,0.9)); border-top: 2px solid #5a0e0e; z-index: 100; padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom)); }
+        .result-buttons .btn { width: 14rem; margin: 0; padding: 0.8rem; font-size: 1.2rem; }
+        
+        #historyPage { padding-top: 5rem; }
+        .history-title { text-align: center; font-size: 1.8rem; color: #d4af37; letter-spacing: 0.4rem; margin-bottom: 2rem; }
+        .history-item { background: rgba(20, 25, 35, 0.8); border: 1px solid #4a3018; border-left: 4px solid #5a0e0e; border-radius: 2px; padding: 1.2rem; margin-bottom: 1rem; cursor: pointer; }
+        .history-header { border-bottom: 1px dashed #333; padding-bottom: 0.5rem; margin-bottom: 0.8rem; }
+        .history-gua-name { font-size: 1.2rem; font-weight: bold; color: #d4af37; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: #0d1117; border: 2px solid #5a0e0e; border-radius: 4px; padding: 1.5rem; box-shadow: 0 0 30px rgba(0,0,0,0.9); width: 90%; max-width: 28rem; max-height: 80vh; overflow-y: auto; }
+
+        /* ================= 司命伴游童子 气泡样式 ================= */
+        #companionBubble {
+            position: fixed; top: 5.5rem; right: 1.43rem; width: 17rem;
+            background: rgba(18, 12, 28, 0.95); border: 2px solid #b388ff;
+            box-shadow: 0 0 20px rgba(179, 136, 255, 0.3); border-radius: 4px;
+            padding: 1rem; z-index: 105; display: none; color: #e1bee7;
+        }
+        .companion-header { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(179, 136, 255, 0.3); padding-bottom: 0.4rem; font-size: 0.85rem; color: #d4af37; }
+        .companion-close { cursor: pointer; color: #888; text-decoration: underline; }
+
+        /* ================= 分类按钮头顶微型剧透气泡 ================= */
+        #categoryHoverTip {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(30, 15, 45, 0.96), rgba(15, 8, 25, 0.96));
+            border: 1px solid #ffd700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 0 15px rgba(212, 175, 55, 0.4);
+            border-radius: 4px; padding: 0.5rem 0.8rem;
+            font-size: 0.95rem; color: #f4e8c1; font-weight: bold;
+            pointer-events: none; z-index: 110; opacity: 0; display: none;
+            transform: translate(-50%, -10px) scale(0.9);
+            transition: opacity 0.15s, transform 0.15s; white-space: nowrap;
+        }
+        #categoryHoverTip::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%;
+            transform: translateX(-50%); border-width: 5px 5px 0;
+            border-style: solid; border-color: #ffd700 transparent; display: block; width: 0;
+        }
+
+        /* ================= 手势区全息教学投影层 ================= */
+        #gestureContainer { 
+            display: none; width: 100%; max-width: 320px; height: 240px; 
+            margin: 0 auto 1.5rem auto; position: relative; border-radius: 4px; 
+            overflow: hidden; border: 2px solid #4a90e2; background: #000; 
+        }
+        #gestureHint { background: rgba(0,0,0,0.7); padding: 5px; color: #8be0ff; font-weight: bold; text-align: center; }
+
+        #holoGuideOverlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 28px;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 10;
+            background: radial-gradient(circle, rgba(16, 30, 45, 0.65) 0%, rgba(0,0,0,0.45) 85%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+
+        .holo-morph-box { position: relative; width: 6rem; height: 6rem; display: flex; align-items: center; justify-content: center; }
+        .holo-morph-box span { position: absolute; font-size: 4.5rem; filter: drop-shadow(0 0 15px rgba(139, 224, 255, 0.9)); user-select: none; }
+        .holo-fist, .holo-palm, .holo-sword { opacity: 0; }
+
+        .holo-mode-shake .holo-fist { opacity: 1; animation: holoShakeAnim 0.22s ease-in-out infinite alternate; }
+        @keyframes holoShakeAnim {
+            0% { transform: translateX(-22px) rotate(-18deg); filter: drop-shadow(-10px 0 6px #b388ff); }
+            100% { transform: translateX(22px) rotate(18deg); filter: drop-shadow(10px 0 6px #b388ff); }
+        }
+
+        .holo-ring-wave { position: absolute; width: 100%; height: 100%; border: 2px solid #ffd700; border-radius: 50%; box-shadow: 0 0 25px #ffd700; opacity: 0; }
+        .holo-mode-burst .holo-fist { animation: fistCharge 1.4s infinite; }
+        .holo-mode-burst .holo-palm { animation: palmFire 1.4s infinite; }
+        .holo-mode-burst .holo-ring-wave { animation: ringExpand 1.4s ease-out infinite; }
+
+        @keyframes fistCharge { 0%, 35% { opacity: 1; transform: scale(0.85); } 36%, 100% { opacity: 0; transform: scale(1.2); } }
+        @keyframes palmFire { 0%, 35% { opacity: 0; transform: scale(0.8); } 36%, 85% { opacity: 1; transform: scale(1.15); } 86%, 100% { opacity: 0; transform: scale(0.8); } }
+        @keyframes ringExpand { 0%, 35% { opacity: 0; transform: scale(0.5); } 36% { opacity: 1; transform: scale(1.0); } 100% { opacity: 0; transform: scale(2.6); } }
+
+        .holo-laser-line { position: absolute; width: 85%; height: 3px; background: #00e5ff; box-shadow: 0 0 15px 4px #00e5ff; display: none; }
+        .holo-mode-laser .holo-sword { opacity: 1; filter: drop-shadow(0 0 20px #00e5ff); }
+        .holo-mode-laser .holo-laser-line { display: block; animation: laserScanAnim 1.2s ease-in-out infinite alternate; }
+        @keyframes laserScanAnim { 0% { transform: translateY(-38px); opacity: 0.3; } 50% { opacity: 1; } 100% { transform: translateY(38px); opacity: 0.3; } }
+        
+        /* ================= 登录与个人中心样式 ================= */
+        .login-container {
+            width: 85%; max-width: 22rem; margin: 0 auto;
+            background: rgba(20, 25, 35, 0.8); border: 1px solid #4a3018;
+            padding: 2rem; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .custom-input {
+            width: 100%; padding: 1rem; margin-bottom: 1.5rem;
+            background: rgba(0,0,0,0.5); border: 1px solid #6b4c05;
+            color: #d4af37; font-family: inherit; font-size: 1.1rem;
+            border-radius: 2px; outline: none; transition: border-color 0.3s;
+        }
+        .custom-input:focus { border-color: #d4af37; box-shadow: 0 0 8px rgba(212, 175, 55, 0.3); }
+        .custom-input::placeholder { color: #555; }
+
+        .qr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.5rem 0; }
+        .qr-card { background: rgba(255, 255, 255, 0.02); border: 1px solid #4a3018; padding: 0.6rem; text-align: center; width: 100%; border-radius: 4px; transition: all 0.3s; }
+        .qr-card:hover { border-color: #d4af37; background: rgba(212, 175, 55, 0.04); }
+        .qr-card img { width: 100%; height: auto; border-radius: 2px; border: 1px solid #222; margin-bottom: 0.6rem; display: block; }
+        .qr-name { font-size: 1.1rem; color: #d4af37; font-weight: bold; margin-bottom: 0.2rem; }
+        .qr-id { font-size: 0.8rem; color: #a99a80; font-family: monospace, serif; }
+        
+        .user-profile-header {
+            text-align: center; margin-bottom: 2rem; padding: 2rem 0;
+            border-bottom: 1px dashed #4a3018;
+        }
+        .avatar-circle {
+            width: 5rem; height: 5rem; margin: 0 auto;
+            background: linear-gradient(135deg, #8b1d1d, #5a0e0e);
+            border: 2px solid #d4af37; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: bold; color: #f4e8c1;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">公道钟馗</div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="headerCompanionToggle" class="header-btn" style="border-color: #b388ff; color: #b388ff;">书童: 在场</button>
+            <button id="historyBtn" class="header-btn" onclick="window['showPage'] ? window['showPage']('historyPage') : (typeof showPage === 'function' ? showPage('historyPage') : null)">问卦志</button>
+            <button id="userCenterBtn" class="header-btn" style="display: none;" onclick="window['showPage'] ? window['showPage']('userCenterPage') : (typeof showPage === 'function' ? showPage('userCenterPage') : null)">个人中心</button>
+            <button id="loginRouteBtn" class="header-btn" onclick="window['showPage'] ? window['showPage']('loginPage') : (typeof showPage === 'function' ? showPage('loginPage') : null)">登录/注册</button>
+        </div>
+    </header>
+
+    <div id="companionBubble">
+        <div class="companion-header"><span class="companion-name">📜 司命伴游 · 丹箓童子</span><span class="companion-close" id="companionClose">禁言</span></div>
+        <div class="companion-text" id="companionText">童子候命...</div>
+    </div>
+
+    <div id="categoryHoverTip">剧透文案载体</div>
+
+    <div id="homePage" class="page active">
+        <h1 class="brand-title">公道钟馗</h1>
+        <p class="brand-slogan">持正守道 · 决疑解惑</p>
+        <button id="startDrawBtn" class="btn btn-primary" onclick="window['setMode'] ? window['setMode']('click') : (typeof setMode === 'function' ? setMode('click') : null)">诚心掷筊 (点击)</button>
+        <button id="startGestureDrawBtn" class="btn btn-gesture" onclick="window['setMode'] ? window['setMode']('gesture') : (typeof setMode === 'function' ? setMode('gesture') : null)">凌空演卦 (手势)</button>
+        <button id="historyBtn2" class="btn btn-secondary" onclick="window['showPage'] ? window['showPage']('historyPage') : (typeof showPage === 'function' ? showPage('historyPage') : null)">翻阅卦志</button>
+        <button id="guideBtn" class="btn" style="background: transparent; color: #a99a80; border: none; font-size: 1rem; text-decoration: underline; margin-top: 0.5rem; box-shadow: none;">📜 法门指引 (玩法说明)</button>
+    </div>
+
+    <div id="drawPage" class="page">
+        <button id="backFromDrawBtn" class="back-btn" onclick="window['showPage'] ? window['showPage']('homePage') : (typeof showPage === 'function' ? showPage('homePage') : null)">返回</button>
+        <h2 style="margin: 30px 0; text-align: center; letter-spacing: 4px; color: #d4af37;">金钱演卦 · 问卜天机</h2>
+
+        <div id="gestureContainer">
+            <video id="gestureVideo" style="display: none;" playsinline></video>
+            <canvas id="gestureCanvas" width="320" height="240"></canvas>
+            
+            <div id="holoGuideOverlay">
+                <div class="holo-morph-box">
+                    <div class="holo-ring-wave"></div>
+                    <span class="holo-fist">✊</span>
+                    <span class="holo-palm">🖐️</span>
+                    <span class="holo-sword">✌️</span>
+                    <div class="holo-laser-line"></div>
+                </div>
+            </div>
+
+            <div id="gestureHint">法眼将启，请稍候...</div>
+        </div>
+
+        <div id="questionSelectionStage">
+            <div class="question-hint"><p class="hint-title">【 司命谕旨 】</p><p class="hint-text">心诚则灵，一事一问。<br>不问非分之财，不卜未定之期。</p></div>
+            
+            <div class="question-categories" id="questionCategories"></div>
+
+            <div class="question-list" id="questionList"></div>
+            <div class="selected-question" id="selectedQuestion"><p class="selected-label">所问何事：</p><p class="selected-text" id="selectedQuestionText"></p></div>
+            
+            <button id="startTossBtn" class="btn btn-primary" disabled>起卦</button>
+        </div>
+
+        <div id="clickStage" style="display: none;">
+            <div class="tortoise-container" id="tortoiseStage">
+                <div class="tortoise-shell" id="tortoiseShell"><div class="tortoise-pattern"></div><div class="tortoise-center"></div></div>
+                <p id="tortoiseClickHint" style="text-align: center; margin-top: 20px; color: #a99a80; font-size: 16px; letter-spacing: 2px;">轻触灵龟，感应天机</p>
+            </div>
+            
+            <div id="coinsStage" style="display: none;">
+                <p style="text-align: center; margin-bottom: 20px; color: #d4af37; font-size: 18px; letter-spacing: 2px;">第 <span id="throwCount">0</span> / 6 掷</p>
+                <div class="coins-container-three">
+                    <div class="coin" id="coin1"></div>
+                    <div class="coin" id="coin2"></div>
+                    <div class="coin" id="coin3"></div>
+                </div>
+                <button id="tossBtn" class="btn btn-primary" style="margin-top: 40px; width: 12rem;">掷钱</button>
+                
+                <div id="currentThrowResult" style="margin-top: 30px; display: none;">
+                    <p style="text-align: center; margin-bottom: 15px; color: #a99a80; font-size: 16px; letter-spacing: 1px;">此掷阴阳</p>
+                    <div class="result-row">
+                        <div class="result-item" id="currentResult1"></div>
+                        <div class="result-item" id="currentResult2"></div>
+                        <div class="result-item" id="currentResult3"></div>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px; font-size: 20px; font-weight: bold; letter-spacing: 4px;" id="yaoResult"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="hexagramStage" style="display: none; margin-top: 40px;">
+            <p style="text-align: center; margin-bottom: 20px; color: #d4af37; font-size: 18px; letter-spacing: 2px;">【 卦象凝结 】</p>
+            <div class="hexagram-container">
+                <div class="yao-row" id="yao5"><div class="yao-label">上爻</div><div class="yao-cell"><div class="yao-symbol yao-empty"></div><span class="dong-indicator"></span></div></div>
+                <div class="yao-row" id="yao4"><div class="yao-label">五爻</div><div class="yao-cell"><div class="yao-symbol yao-empty"></div><span class="dong-indicator"></span></div></div>
+                <div class="yao-row" id="yao3"><div class="yao-label">四爻</div><div class="yao-cell"><div class="yao-symbol yao-empty"></div><span class="dong-indicator"></span></div></div>
+                <div class="yao-row" id="yao2"><div class="yao-label">三爻</div><div class="yao-cell"><div class="yao-symbol yao-empty"></div><span class="dong-indicator"></span></div></div>
+                <div class="yao-row" id="yao1"><div class="yao-label">二爻</div><div class="yao-cell"><div class="yao-symbol yao-empty"></div><span class="dong-indicator"></span></div></div>
+                <div class="yao-row" id="yao0"><div class="yao-label">初爻</div><div class="yao-cell"><div class="yao-symbol yao-empty"></div><span class="dong-indicator"></span></div></div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="magicCanvas"></canvas>
+    
+    <!-- <div id="silentGestureHint">灵气感应中：拇指食指开合可缩放卡牌</div> -->
+
+    <div id="resultPage" class="page">
+        <div class="result-header">
+            <button id="backFromResultBtn" class="back-btn" onclick="window['showPage'] ? window['showPage']('homePage') : (typeof showPage === 'function' ? showPage('homePage') : null)">返回</button>
+            <div class="question-hint" id="resultQuestionHint">
+                <p class="hint-title" style="margin-bottom: 5px;">【 断卦旨要 】</p>
+                <p class="hint-text" id="resultQuestionText" style="font-size: 1.1rem; color: #f4e8c1;"></p>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="gua-card-pair main-gua-pair">
+                <div class="card-placeholder main-card" id="mainCardContainer">
+                    <img id="mainCardImage" src="cards/卡片.png" alt="本卦卡牌" onerror="this.src='卡片.png'" />
+                    <div class="card-label">本卦</div>
+                </div>
+                <div class="gua-section main-gua">
+                    <div class="gua-header">
+                        <span class="gua-label">本卦</span>
+                        <span class="gua-name" id="mainGuaName">乾卦</span>
+                    </div>
+                    <div class="hexagram-container" id="mainYaoDisplay">
+                        <div class="yao-row"><div class="yao-label">上爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">五爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">四爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">三爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">二爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">初爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                    </div>
+                    <div class="gua-text" id="mainGuaText">元亨，利贞。</div>
+                </div>
+            </div>
+            
+            <div class="gua-card-pair changed-gua-pair" id="changedGuaPair" style="display: none;">
+                <div class="card-placeholder changed-card" id="changedCardContainer">
+                    <img id="changedCardImage" src="cards/卡片.png" alt="变卦卡牌" onerror="this.src='卡片.png'" />
+                    <div class="card-label">变卦</div>
+                </div>
+                <div class="gua-section" id="changedGuaSection">
+                    <div class="gua-header">
+                        <span class="gua-label">变卦</span>
+                        <span class="gua-name" id="changedGuaName">乾卦</span>
+                    </div>
+                    <div class="hexagram-container" id="changedYaoDisplay">
+                        <div class="yao-row"><div class="yao-label">上爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">五爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">四爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">三爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">二爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                        <div class="yao-row"><div class="yao-label">初爻</div><div class="yao-cell"><div class="yao-symbol yao-yang"></div><span class="dong-indicator"></span></div></div>
+                    </div>
+                    <div class="gua-text" id="changedGuaText"></div>
+                </div>
+            </div>
+        </div>
+            
+        <div class="dongyao-info" id="dongyaoInfo" style="display: none;">
+            <p>【 动爻机变 】 <span id="dongyaoText"></span></p>
+        </div>
+
+        <div class="card-analysis-box">
+            <div class="analysis-header">
+                <span class="analysis-title">判词详解</span>
+            </div>
+            <div class="analysis-content" id="cardAnalysis">卦象解读内容</div>
+        </div>
+
+        <div class="result-buttons">
+            <button id="drawAgainBtn" class="btn btn-primary" onclick="window['showPage'] ? window['showPage']('drawPage') : (typeof showPage === 'function' ? showPage('drawPage') : null)">另起一卦</button>
+            <button id="shareBtn" class="btn btn-secondary">请符分享</button>
+        </div>
+    </div>
+
+    <div id="loginPage" class="page">
+        <button class="back-btn" onclick="window['showPage'] ? window['showPage']('homePage') : (typeof showPage === 'function' ? showPage('homePage') : null)">返回</button>
+        <h2 style="margin: 30px 0 50px 0; text-align: center; letter-spacing: 4px; color: #d4af37;">叩启法门</h2>
+        <div class="login-container">
+            <input type="text" id="usernameInput" class="custom-input" placeholder="输入尊号 (账号)">
+            <input type="password" id="passwordInput" class="custom-input" placeholder="输入法印 (密码)">
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <button onclick="window['handleLogin'] ? window['handleLogin']() : (typeof handleLogin === 'function' ? handleLogin() : null)" class="btn btn-primary" style="width: 100%; margin:0;">登堂入室</button>
+                <button onclick="window['handleRegister'] ? window['handleRegister']() : (typeof handleRegister === 'function' ? handleRegister() : null)" class="btn btn-secondary" style="width: 100%; margin:0;">结缘注册</button>
+            </div>
+            <p id="loginMessage" style="text-align: center; margin-top: 15px; color: #8b1d1d; height: 20px;"></p>
+        </div>
+    </div>
+
+    <div id="userCenterPage" class="page">
+        <button class="back-btn" onclick="window['showPage'] ? window['showPage']('homePage') : (typeof showPage === 'function' ? showPage('homePage') : null)">返回</button>
+        <div class="user-profile-header">
+            <div class="avatar-circle">道</div>
+            <h2 id="displayUsername" style="color: #d4af37; margin: 10px 0; letter-spacing: 2px;">道友</h2>
+            <p style="color: #a99a80; font-size: 0.9rem;">已结缘共探天机</p>
+        </div>
+        <div class="user-menu">
+            <button class="btn btn-primary" onclick="window['showPage'] ? window['showPage']('historyPage') : (typeof showPage === 'function' ? showPage('historyPage') : null)" style="width: 80%; margin: 10px auto;">我的问卦志</button>
+            <button class="btn btn-secondary" onclick="window['handleLogout'] ? window['handleLogout']() : (typeof handleLogout === 'function' ? handleLogout() : null)" style="width: 80%; margin: 10px auto; border-color: #8b1d1d; color: #8b1d1d;">退出法门</button>
+        </div>
+    </div>
+
+    <div id="historyPage" class="page">
+        <button id="backFromHistoryBtn" class="back-btn" onclick="window['showPage'] ? window['showPage']('homePage') : (typeof showPage === 'function' ? showPage('homePage') : null)">返回</button>
+        <h2 class="history-title">卦象纪事</h2>
+        <ul class="history-list" id="historyList">
+            <li style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">法卷空白，暂无所录</li>
+        </ul>
+        <button id="clearHistoryBtn" class="clear-history-btn">焚毁此卷</button>
+        <button id="backToHomeBtn" class="btn btn-secondary" style="width:14rem;" onclick="window['showPage'] ? window['showPage']('homePage') : (typeof showPage === 'function' ? showPage('homePage') : null)">回归本山</button>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">天机提示</div>
+            <div class="modal-message" id="modalMessage" style="margin:20px 0; color:#c9bda5; text-align:center;">确定要执行此操作吗？</div>
+            <div class="modal-buttons" style="display:flex; justify-content:center; gap:20px;">
+                <button id="modalCancel" class="modal-btn cancel" style="padding:10px 20px; background:transparent;">三思</button>
+                <button id="modalConfirm" class="modal-btn confirm" style="padding:10px 20px;">定夺</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="wechatUnlockModal">
+        <div class="modal-content" style="max-width: 32rem; width: 92%;">
+            <div class="modal-title" style="color: #d4af37; font-size: 1.4rem;">【 结缘公道 · 开启无限机缘 】</div>
+            <div style="color: #e5d3b3; font-size: 1.05rem; line-height: 1.8; margin: 1.5rem 0; text-align: justify;">
+                道友，单次试玩法力已尽。<br><br>
+                扫码添加官方司命微信，获取<span style="color:#d4af37; font-weight:bold;">专属激活码</span>。
+            </div>
+            <div style="text-align: center; margin: 1.5rem 0;">
+                <img src="企业微信.jpg" alt="官方微信" style="width: 12rem; height: 12rem; border: 2px solid #d4af37; border-radius: 4px; object-fit: cover;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'#333\'/><text x=\'50\' y=\'50\' fill=\'#d4af37\' text-anchor=\'middle\' alignment-baseline=\'middle\'>官方微信</text></svg>'">
+            </div>
+            
+            <div style="margin-top: 15px; text-align: center;">
+                <input type="text" id="activationCodeInput" class="custom-input" placeholder="输入司命赐予的激活码" style="width: 80%; padding: 0.8rem; margin-bottom: 10px; text-align: center;">
+                <p id="activationMessage" style="color: #8b1d1d; font-size: 0.95rem; height: 1.2rem;"></p>
+            </div>
+
+            <div style="text-align: center; margin: 10px;">
+                <button onclick="handleVerifyWeChat()" class="btn btn-primary" style="width: 100%; margin: 0;">验证机缘 (激活)</button>
+                <button onclick="closeWechatModal()" class="modal-btn cancel" style="margin-top: 1rem; padding: 8px 24px; font-size: 1rem; width: 100%; border:none; background:transparent;">暂不结缘</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal-content" style="max-width: 38rem; width: 92%;">
+            <div class="modal-title" style="color: #d4af37; font-size: 1.4rem;">【 结缘传道 · 请符分享 】</div>
+            <p style="text-align: center; color: #a99a80; font-size: 0.95rem; margin-top: 0.5rem;">扫描法印二维码，寻觅钟馗法脉之音</p>
+            
+            <div class="qr-grid">
+                <div class="qr-card">
+                    <img src="小红书.jpg" alt="小红书" onerror="this.style.display='none';">
+                    <div class="qr-name">小红书</div>
+                    <div class="qr-id">26850371007</div>
+                </div>
+                <div class="qr-card">
+                    <img src="抖音.png" alt="抖音" onerror="this.style.display='none';">
+                    <div class="qr-name">抖音</div>
+                    <div class="qr-id">42895669638</div>
+                </div>
+                <div class="qr-card">
+                    <img src="推特.png" alt="X" onerror="this.style.display='none';">
+                    <div class="qr-name">X</div>
+                    <div class="qr-id">@gongdaozhongkui</div>
+                </div>
+                <div class="qr-card">
+                    <img src="企业微信.jpg" alt="企业微信" onerror="this.style.display='none';">
+                    <div class="qr-name">企业微信</div>
+                    <div class="qr-id">公道 · 钟馗</div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="shareModalClose" class="modal-btn cancel" style="padding: 8px 24px; font-size: 1rem;">闭合本卷</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="guideModal">
+        <div class="modal-content" style="max-width: 32rem; color: #e5d3b3; line-height: 1.8;">
+            <div class="modal-title" style="color: #d4af37; font-size: 1.5rem; text-align: center; margin-bottom: 1.5rem;">【 问卜法门指引 】</div>
+            
+            <h3 style="color: #8b1d1d; margin-bottom: 0.5rem; border-bottom: 1px dashed #4a3018; padding-bottom: 0.3rem;">👆 诚心掷筊 (点击模式)</h3>
+            <ol style="padding-left: 1.5rem; color: #c9bda5; margin-bottom: 1.5rem;">
+                <li>于案前选定所求之事。</li>
+                <li>轻触屏幕中央之灵龟，唤醒灵力。</li>
+                <li>连续点击“掷钱”，落定六爻，静待天机凝结。</li>
+            </ol>
+
+            <h3 style="color: #4a90e2; margin-bottom: 0.5rem; border-bottom: 1px dashed #4a3018; padding-bottom: 0.3rem;">✋ 凌空演卦 (AI 手势模式)</h3>
+            <ul style="padding-left: 1.5rem; color: #8be0ff; list-style-type: none; margin-left: -1.5rem;">
+                <li style="margin-bottom: 0.5rem;">👁️ <b>起势：</b> 需先赐予设备“法眼 (摄像头)”权限。</li>
+                <li style="margin-bottom: 0.5rem;">✊ <b>唤龟：</b> 面对镜头<b>握拳并左右摇晃</b>。</li>
+                <li style="margin-bottom: 0.5rem;">🖐️ <b>掷钱：</b> 保持握拳，随后<b>猛然张开五指</b> (重复六次)。</li>
+                <li style="margin-bottom: 0.5rem;">✌️ <b>开眼：</b> 捏出<b>剑指</b> (食指与中指并拢直立)，法阵即刻显化。</li>
+                <li>🤏 <b>观微：</b> 显影后，拇指与食指<b>凌空开合</b>，可缩放法牌。</li>
+            </ul>
+
+            <div style="text-align: center; margin-top: 2rem;"><button id="closeGuideBtn" class="btn btn-primary" style="width: 80%; padding: 0.8rem; margin: 0 auto;">我已了然</button></div>
+        </div>
+    </div>
+
+    <script src="zhongkui-min_0625.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const guideModal = document.getElementById('guideModal');
+            document.getElementById('guideBtn')?.addEventListener('click', () => guideModal.classList.add('active'));
+            document.getElementById('closeGuideBtn')?.addEventListener('click', () => guideModal.classList.remove('active'));
+
+            let companionMuted = false; let roastTimer = null; let localDetectedMode = 'click';
+            const bubble = document.getElementById('companionBubble'); const textEl = document.getElementById('companionText');
+            const headerToggleBtn = document.getElementById('headerCompanionToggle');
+            const holoOverlay = document.getElementById('holoGuideOverlay');
+
+            function speak(html, isRoast = false) {
+                if(companionMuted) return;
+                textEl.innerHTML = html; bubble.style.display = 'block';
+            }
+            function shutUp() { bubble.style.display = 'none'; clearTimeout(roastTimer); }
+
+            function toggleCompanionState(forceState) {
+                companionMuted = forceState !== undefined ? !forceState : !companionMuted;
+                if (!companionMuted) {
+                    headerToggleBtn.textContent = '书童: 在场'; headerToggleBtn.style.color = '#b388ff';
+                    speak('「咳咳，小仙丹箓童子在此！道友请继续...」');
+                } else {
+                    headerToggleBtn.textContent = '书童: 退下'; headerToggleBtn.style.color = '#888'; shutUp();
+                }
+            }
+            document.getElementById('companionClose')?.addEventListener('click', () => toggleCompanionState(false));
+            headerToggleBtn?.addEventListener('click', () => toggleCompanionState());
+
+            document.getElementById('startDrawBtn')?.addEventListener('click', () => { localDetectedMode = 'click'; speak('「道友步履勿急，先在下方卷轴中<b>点选一事</b>，小仙方知从何查起。」'); });
+            document.getElementById('startGestureDrawBtn')?.addEventListener('click', () => { localDetectedMode = 'gesture'; speak('「凌空法阵开启！道友先选个顺眼的问题，咱们即刻开坛！」'); });
+            document.getElementById('startTossBtn')?.addEventListener('click', () => { if(localDetectedMode === 'click') speak('「好嘞！将掌心<b>轻触中央灵龟</b>，把汝之一腔诚意注入龟壳...」'); });
+
+            /* ================= 【驱动A 修正版】：全局悬浮避开JS抹杀 ================= */
+            const hoverTipEl = document.getElementById('categoryHoverTip');
+            const catDict = {
+                "诚心一问": "神明最喜听大白话，道友心中有何千千结，随便唠！",
+                "事业前程": "官运亨通还是原地打转？且看老爷赐你一记升官印！",
+                "财气运势": "想搞钱？老爷刚正不阿，偏财不佑，正财极为灵验！",
+                "姻缘桃花": "问红鸾星？待小仙帮你瞧瞧这朵桃花是正缘还是劫数...",
+                "科举学业": "文昌帝君今夜当班，道友的笔锋可曾开光？"
+            };
+
+            // 使用事件委托绑定到父级，确保即使JS刷新了里面的按钮，依然能监听到
+            const catBox = document.getElementById('questionCategories');
+            if(catBox && hoverTipEl) {
+                const showCatTip = (e) => {
+                    const btn = e.target.closest('.category-btn');
+                    if(!btn) return;
+                    const catName = btn.innerText.trim();
+                    hoverTipEl.innerText = catDict[catName] || "此门分类暗藏玄机，道友且细细问来。";
+                    hoverTipEl.style.display = 'block';
+                    
+                    const btnRect = btn.getBoundingClientRect();
+                    // 加上 window.scroll 修正绝对坐标
+                    hoverTipEl.style.left = (btnRect.left + window.scrollX + btnRect.width / 2) + 'px';
+                    hoverTipEl.style.top = (btnRect.top + window.scrollY - 5) + 'px';
+                    setTimeout(() => { hoverTipEl.style.opacity = '1'; hoverTipEl.style.transform = 'translate(-50%, -100%) scale(1)'; }, 10);
+                };
+                const hideCatTip = () => { hoverTipEl.style.opacity = '0'; hoverTipEl.style.transform = 'translate(-50%, -10px) scale(0.9)'; setTimeout(() => hoverTipEl.style.display='none', 150); };
+
+                catBox.addEventListener('mouseover', showCatTip); catBox.addEventListener('mouseout', hideCatTip);
+                catBox.addEventListener('touchstart', showCatTip); catBox.addEventListener('touchend', hideCatTip);
+            }
+
+            /* ================= 【驱动B】：全息教学膜 状态机 ================= */
+            if(document.getElementById('gestureHint')) {
+                new MutationObserver(() => {
+                    const hint = document.getElementById('gestureHint').innerText || '';
+                    clearTimeout(roastTimer); 
+
+                    if(localDetectedMode === 'gesture' && holoOverlay) {
+                        holoOverlay.style.opacity = '1';
+
+                        if(hint.includes('左右摇晃')) {
+                            speak('「法眼睁开了！请对着镜头<b>握拳左右摇晃</b>。把龟爷晃醒！」');
+                            holoOverlay.className = 'holo-mode-shake';
+                            roastTimer = setTimeout(() => speak('「使劲摇啊道友！你这摆拳幅度比楼下大爷扇扇子还轻！」', true), 5000);
+                        } 
+                        else if(hint.includes('用力张开')) {
+                            speak('「拳锋灵气已满！听小仙号令，<b>猛然张开五指——放！</b>」');
+                            holoOverlay.className = 'holo-mode-burst';
+                            roastTimer = setTimeout(() => speak('「五指张得再坚决一点！手掌正对镜头，别让法眼把你的手看成发面包子！」', true), 4500);
+                        }
+                        else if(hint.includes('投掷金钱')) {
+                            speak('「漂亮！请<b>重新握拳</b>准备下一掷。手别抖，神仙在看着呢。」');
+                            holoOverlay.className = 'holo-mode-shake'; holoOverlay.style.opacity = '0.4';
+                        }
+                        else if(hint.includes('请捏剑指')) {
+                            speak('「六爻皆满！请竖起食中二指，<b>并拢直立捏成【剑指】</b>，开法眼！」');
+                            holoOverlay.className = 'holo-mode-laser';
+                            roastTimer = setTimeout(() => speak('「道友，是食指和中指直立！不是耶✌️，也不是摇滚手势🤘！」', true), 5000);
+                        } else { holoOverlay.style.opacity = '0'; }
+                    }
+                }).observe(document.getElementById('gestureHint'), { childList: true, characterData: true, subtree: true });
+            }
+
+            /* ================= 【终极切页视口归零器】 ================= */
+            const pageObs = new MutationObserver((mutations) => {
+                mutations.forEach(m => {
+                    const el = m.target;
+                    if (el.classList.contains('active')) {
+                        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                        document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
+
+                        if (el.id === 'resultPage') {
+                            clearTimeout(roastTimer); if(holoOverlay) holoOverlay.style.opacity = '0';
+                            if (localDetectedMode === 'gesture') speak('「判词已显。伸出拇指与食指<b>凌空开合捏拽</b>，可将法牌拉近细观。」');
+                            else speak('「判词已显！道友可细观上方<b>卦象卡牌</b>，或下滑参阅详解。」');
+                        } else if (el.id === 'homePage') { shutUp(); }
+                    }
+                });
+            });
+            document.querySelectorAll('.page').forEach(p => pageObs.observe(p, { attributes: true, attributeFilter: ['class'] }));
+        });
+    </script>
+</body>
+</html>

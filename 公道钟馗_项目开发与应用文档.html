@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公道钟馗 · 项目开发与应用文档（封装 APP / Google Play 上架专用）</title>
+<style>
+  :root{
+    --ink:#1a2233; --ink-soft:#3a4358; --bg:#f7f5f0; --paper:#ffffff;
+    --gold:#b8860b; --red:#8b1d1d; --line:#e3ddd0; --accent:#163a4a;
+    --ok:#1e7d45; --warn:#b25e09; --bad:#a41414;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC",sans-serif;background:var(--bg);color:var(--ink);line-height:1.85;font-size:15px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 24px 80px;}
+  header.doc-head{background:linear-gradient(135deg,#10131a 0%,#1c2438 60%,#10131a 100%);color:#e9d9ac;padding:56px 40px;border-radius:8px;border-bottom:4px solid var(--gold);margin-bottom:36px;}
+  header.doc-head .kicker{letter-spacing:6px;font-size:13px;color:var(--gold);margin-bottom:14px;}
+  header.doc-head h1{font-size:30px;letter-spacing:2px;margin-bottom:10px;color:#f4e8c1;}
+  header.doc-head p.sub{color:#a99a80;font-size:14px;}
+  .meta-strip{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;font-size:12.5px;}
+  .meta-strip span{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);color:#e9d9ac;padding:3px 12px;border-radius:2px;}
+  h2{font-size:21px;color:var(--red);border-left:5px solid var(--gold);padding-left:12px;margin:48px 0 18px;letter-spacing:1px;}
+  h3{font-size:17px;color:var(--accent);margin:28px 0 12px;}
+  h4{font-size:15px;color:var(--ink-soft);margin:18px 0 8px;}
+  p{margin:10px 0;}
+  section{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:28px 32px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;}
+  th{background:#10131a;color:#e9d9ac;padding:9px 10px;text-align:left;font-weight:600;letter-spacing:.5px;}
+  td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;}
+  tr:nth-child(even) td{background:#faf8f3;}
+  code,pre{font-family:Consolas,Menlo,monospace;background:#f0ede6;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:12.5px;color:#5a0e0e;}
+  pre{padding:14px 16px;overflow-x:auto;line-height:1.6;margin:12px 0;}
+  .tag{display:inline-block;padding:1px 9px;border-radius:2px;font-size:12px;font-weight:600;}
+  .t-done{background:#e3f3e9;color:var(--ok);border:1px solid #bfe3cd;}
+  .t-part{background:#fdf0e0;color:var(--warn);border:1px solid #f0d9b5;}
+  .t-none{background:#fbe5e5;color:var(--bad);border:1px solid #efc3c3;}
+  .t-info{background:#e6eef5;color:var(--accent);border:1px solid #c8d8e6;}
+  .callout{border-left:4px solid var(--gold);background:#fdf9ee;padding:14px 18px;margin:16px 0;border-radius:0 6px 6px 0;}
+  .callout.danger{border-left-color:var(--bad);background:#fdf1f1;}
+  .callout.info{border-left-color:var(--accent);background:#eef5fa;}
+  ul,ol{padding-left:24px;margin:10px 0;}
+  li{margin:5px 0;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr;}}
+  .kpi{background:#faf8f3;border:1px solid var(--line);border-radius:6px;padding:14px;text-align:center;}
+  .kpi b{display:block;font-size:22px;color:var(--red);}
+  .kpi span{font-size:12px;color:var(--ink-soft);}
+  footer{margin-top:48px;text-align:center;color:#a99a80;font-size:12.5px;border-top:1px dashed var(--line);padding-top:20px;}
+  .toc{columns:2;column-gap:40px;font-size:14px;}
+  .toc a{color:var(--accent);text-decoration:none;}
+  .toc a:hover{color:var(--gold);}
+  @media(max-width:640px){.toc{columns:1;}}
+  @media print{body{background:#fff;}section{box-shadow:none;break-inside:avoid;}header.doc-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <div class="kicker">PROJECT DEVELOPMENT &amp; APPLICATION DOSSIER</div>
+  <h1>公道钟馗 · 项目开发与应用文档</h1>
+  <p class="sub">用途：H5 游戏封装为 Android APP 并上架 Google Play 的全程工程依据</p>
+  <div class="meta-strip">
+    <span>文档版本 V1.0</span><span>编制日期 2026-10-07</span><span>代码基线 index_0625_1906.html</span>
+    <span>受众：开发 / 上架运营 / 赛事评审</span><span>新鲜度规则：代码或商店政策变更后 7 日内复核</span>
+  </div>
+</header>
+
+<!-- ============ 0. 文档控制 ============ -->
+<section id="s0">
+<h2>0. 文档控制（Documentation Lifecycle）</h2>
+<table>
+  <tr><th>控制项</th><th>约定</th></tr>
+  <tr><td>受众与用途</td><td>① 开发方：封装与上架改造的施工依据；② 上架负责人：Google Play 合规自查；③ 赛事评审：项目完成度佐证</td></tr>
+  <tr><td>事实来源（Source of Truth）</td><td>功能实现以 <code>index_0625_1906.html</code> + <code>zhongkui-min_0625.js</code> 实际代码为唯一权威；PRD 与开发计划仅作目标参照，凡冲突处以代码为准</td></tr>
+  <tr><td>不重复规则</td><td>每类信息仅在本文档一处维护；PRD、迭代记录.txt 如出现冲突描述，以本文档第 3、4 章为准，并在源文件标注"以开发与应用文档为准"</td></tr>
+  <tr><td>新鲜度信号</td><td>① 代码基线版本号变更（如 index_07xx）；② Google Play 目标 API / 政策更新；③ 上次验证日期距今 &gt; 90 天 → 文档标记为"待复核"</td></tr>
+  <tr><td>变更触发器</td><td>封装工程启动、商店提审被拒、功能增删、变现策略调整</td></tr>
+</table>
+
+<h3>目录</h3>
+<div class="toc">
+  <p><a href="#s1">1. 项目概述（PRD 摘要）</a></p>
+  <p><a href="#s2">2. 交付物盘点：index 文件实际完成内容</a></p>
+  <p><a href="#s3">3. PRD 需求 vs 实际实现对照（差距分析）</a></p>
+  <p><a href="#s4">4. 技术架构与资产清单</a></p>
+  <p><a href="#s5">5. H5 封装 Android APP 技术方案</a></p>
+  <p><a href="#s6">6. Google Play 上架合规要求</a></p>
+  <p><a href="#s7">7. 发布工程：分阶段发布与稳定性预算</a></p>
+  <p><a href="#s8">8. 风险登记册</a></p>
+  <p><a href="#s9">9. 上架施工清单（Checklist）</a></p>
+  <p><a href="#s10">10. 附录：文档清单与术语</a></p>
+</div>
+</section>
+
+<!-- ============ 1. 项目概述 ============ -->
+<section id="s1">
+<h2>1. 项目概述（PRD 摘要）</h2>
+<table>
+  <tr><th style="width:140px;">项目</th><th>内容</th></tr>
+  <tr><td>产品名称</td><td>公道钟馗（Gongdao Zhongkui），页面标题为「公道钟馗 - 六爻问卦（手势版）」</td></tr>
+  <tr><td>产品定位</td><td>国风数字交互典藏卡牌 + 轻量文化占卜体验平台</td></tr>
+  <tr><td>核心玩法</td><td>用户选定所问之事 → 通过<b>点击</b>或<b>摄像头手势</b>完成"摇龟壳 → 掷铜钱 ×6 → 凝结六爻卦象 → 显化判词"的问卦仪式，获得本卦 / 变卦 / 动爻与对应国风卡牌</td></tr>
+  <tr><td>Slogan</td><td>持正守道 · 决疑解惑</td></tr>
+  <tr><td>技术栈（实际）</td><td>原生 HTML5 + CSS3 + JavaScript（单页应用）+ MediaPipe Hands（CDN）+ localStorage 本地持久化；<b>无后端服务</b></td></tr>
+  <tr><td>目标平台</td><td>当前：移动端 H5；目标：封装 Android APP 上架 Google Play</td></tr>
+</table>
+<div class="callout info">PRD V1.0 为完整产品愿景（含支付、图鉴、成就、后端等 12 周规划）；开发计划为 1 周 MVP 策略（单文件优先、P0→P1→P2 顺序解锁）。本文档第 3 章给出两者的实际落地差距。</div>
+</section>
+
+<!-- ============ 2. 实际完成内容 ============ -->
+<section id="s2">
+<h2>2. 交付物盘点：index 文件实际完成内容</h2>
+<p>以下清单全部经源码核实，代码基线为 <code>index_0625_1906.html</code>（704 行）+ <code>zhongkui-min_0625.js</code>（约 62KB，已混淆压缩）。</p>
+
+<h3>2.1 页面结构（6 个页面 + 4 个模态框）</h3>
+<table>
+  <tr><th>页面 / 模态框</th><th>DOM ID</th><th>实际内容</th><th>状态</th></tr>
+  <tr><td>首页</td><td><code>#homePage</code></td><td>品牌标题「公道钟馗」、Slogan「持正守道 · 决疑解惑」、双模式入口（诚心掷筊·点击 / 凌空演卦·手势）、翻阅卦志入口、法门指引入口</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>问卦页</td><td><code>#drawPage</code></td><td>问题分类与题库选择 → 起卦 → 点击模式（灵龟摇晃 + 三枚铜钱 × 6 掷）/ 手势模式（摄像头画面 + 全息教学层）→ 六爻卦象凝结动画</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>解卦结果页</td><td><code>#resultPage</code></td><td>所问之事回显、本卦/变卦卡牌 + 卦象六爻图（阴爻/阳爻/动爻标记）、动爻机变提示、判词详解、「另起一卦」「请符分享」按钮</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>登录/注册页</td><td><code>#loginPage</code></td><td>账号 + 密码输入，「登堂入室」「结缘注册」按钮，本地校验与提示</td><td><span class="tag t-part">本地模拟</span></td></tr>
+  <tr><td>个人中心页</td><td><code>#userCenterPage</code></td><td>头像圆章（"道"字）、用户名展示、我的问卦志入口、退出登录</td><td><span class="tag t-part">本地模拟</span></td></tr>
+  <tr><td>历史记录页（卦象纪事）</td><td><code>#historyPage</code></td><td>历史卦象列表、单条回看、「焚毁此卷」清空、localStorage 持久化</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>通用确认模态框</td><td><code>#modal</code></td><td>标题 + 信息 + 三思/定夺双按钮</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>结缘解锁模态框</td><td><code>#wechatUnlockModal</code></td><td>免费次数用尽后展示：企业微信二维码 + 激活码输入框 + 验证/暂不结缘按钮（0625_1906 版本修复补全）</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>分享模态框</td><td><code>#shareModal</code></td><td>四宫格平台二维码卡片：小红书 26850371007 / 抖音 42895669638 / X @gongdaozhongkui / 企业微信「公道 · 钟馗」（0625_1906 版本修复补全）</td><td><span class="tag t-part">静态展示</span></td></tr>
+  <tr><td>玩法指引模态框</td><td><code>#guideModal</code></td><td>点击模式 3 步说明 + 手势模式 5 步图文说明（起势/唤龟/掷钱/开眼/观微）</td><td><span class="tag t-done">已完成</span></td></tr>
+</table>
+
+<h3>2.2 核心玩法实现</h3>
+<table>
+  <tr><th>功能</th><th>实现细节（代码实证）</th><th>状态</th></tr>
+  <tr><td>六爻金钱卦算法</td><td>三枚铜钱连掷 6 次，每次按正反面计阴阳与老少，自下而上凝结初爻→上爻；自动判定动爻（老阴/老阳）并计算本卦 → 变卦</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>问题题库</td><td>5 大分类：<b>诚心一问 / 事业前程 / 财气运势 / 姻缘桃花 / 科举学业</b>，分类按钮带悬停/触摸"剧透文案"气泡（<code>#categoryHoverTip</code>，事件委托绑定防刷新丢失）</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>点击模式</td><td>灵龟点击摇晃动画（CSS shake）→ 铜钱投掷动画（throwCoin 1.5s）→ 逐掷结果展示（正/反圆章）→ 卦象凝结</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>AI 手势模式</td><td>MediaPipe Hands（jsDelivr CDN 四件套：camera_utils / control_utils / drawing_utils / hands）驱动：<b>✊ 握拳左右摇晃</b>=唤龟；<b>🖐️ 握拳→张掌</b>=掷钱（重复 6 次）；<b>✌️ 剑指</b>=开眼显化；<b>🤏 拇指食指捏合</b>=缩放卡牌（<code>maxNumHands</code> 等参数已配置）</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>全息教学投影层</td><td><code>#holoGuideOverlay</code> 状态机：根据手势提示文本自动切换 摇晃（紫色拖影拳头）/ 爆发（拳→掌 + 金环扩散）/ 激光扫描（剑指 + 青色光刃） 三种教学动画</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>司命伴游·丹箓童子</td><td>右上角色气泡（<code>#companionBubble</code>），全流程情景解说 + 超时吐槽（如"你这摆拳幅度比楼下大爷扇扇子还轻"），顶栏常驻开关（书童: 在场/退下）、可禁言</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>切页视口归零</td><td>MutationObserver 监听 <code>.page.active</code> 切换，强制 <code>scrollTo(0,0)</code>，修复页面半山腰/下沉问题（0622_1859 迭代修复）</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>账号系统</td><td>注册 / 登录 / 退出，<code>usersDB</code> + <code>currentUser</code> 存 localStorage；密码明文存于本地（见第 8 章风险 R-04）</td><td><span class="tag t-part">本地模拟</span></td></tr>
+  <tr><td>免费次数与激活码解锁</td><td>未解锁用户有试用次数限制，耗尽后弹 <code>#wechatUnlockModal</code>；<code>handleVerifyWeChat()</code> 校验激活码后置解锁标记（纯前端校验，<b>无服务端验证</b>）</td><td><span class="tag t-done">已完成</span> <span class="tag t-info">合规待整改</span></td></tr>
+  <tr><td>历史记录</td><td><code>drawHistory</code> 存 localStorage，列表展示 + 清空，退出登录时清除</td><td><span class="tag t-done">已完成</span></td></tr>
+  <tr><td>Open Graph 分享元信息</td><td><code>og:title/description/image</code> 已配置（指向 GitHub Pages 分享图）</td><td><span class="tag t-done">已完成</span></td></tr>
+</table>
+
+<h3>2.3 视觉与体验设计</h3>
+<ul>
+  <li><b>中式古典道教 UI</b>：隶/楷字体栈、暗色底 + 金色 #d4af37 + 朱红 #8b1d1d，全屏 ☯ 水印底纹、灵龟 / 铜钱 / 卦爻全套拟物组件</li>
+  <li><b>安全区适配</b>：<code>env(safe-area-inset-top/bottom)</code> 适配刘海屏，<code>viewport-fit=cover</code>、禁缩放、<code>overscroll-behavior</code> 防橡皮筋穿透</li>
+  <li><b>特效画布</b>：全屏 <code>#magicCanvas</code> 固定层（pointer-events:none，解决点击穿透）</li>
+  <li><b>迭代修复记录</b>：苹果太极 Emoji 兼容、书童总闸开关、智能切页文案、新手指引卷轴、页面下沉自适应、两大模态框补全（详见 <code>迭代记录.txt</code>）</li>
+</ul>
+
+<div class="callout">
+<b>待办（迭代记录明确列出）</b>：① 四个平台二维码点击跳转对应平台；② 「请符分享」点击后当前仅展示静态二维码，未生成分享图 / 未调起系统分享。
+</div>
+</section>
+
+<!-- ============ 3. 差距分析 ============ -->
+<section id="s3">
+<h2>3. PRD 需求 vs 实际实现对照（差距分析）</h2>
+<p>结论先行：<b>MVP 的"问卦仪式闭环"已完整落地，但产品形态与 PRD 存在方向性偏离</b>——PRD 设计的是"稀有度抽卡收集"（传说 2% / 史诗 8% / 稀有 20% / 普通 70% 的卡池概率模型），实际交付的是"六爻金钱卦占卜 + 64 卦牌显化"，两者数值体系完全不同，上架前需确认以哪套为准。</p>
+<table>
+  <tr><th>PRD 模块</th><th>PRD 要求</th><th>实际实现</th><th>差距结论</th></tr>
+  <tr><td>首页</td><td>品牌展示 + 开始抽卡 + 卡册/活动入口 + Banner</td><td>品牌展示 + 双模式入口 + 卦志 + 指引</td><td><span class="tag t-done">核心达成</span> 无 Banner/公告</td></tr>
+  <tr><td>抽卡/问卦核心</td><td>手势摇龟壳→掷铜钱→抽卡，含超时/跳过/容错</td><td>双模式完整闭环，含全息教学与情景解说</td><td><span class="tag t-done">达成且超预期</span></td></tr>
+  <tr><td>卡牌系统</td><td>4 级稀有度概率卡池 + 保底 + 卡册 + 图鉴 + 重复转灵力</td><td>64 张卦牌（工厂2.0/1~64.webp）按卦象对应显化，无稀有度、无卡册、无图鉴</td><td><span class="tag t-none">体系不同</span></td></tr>
+  <tr><td>结果页</td><td>卦象 + 运势解读 + 获得卡牌 + 分享</td><td>本卦/变卦 + 动爻 + 判词详解 + 分享模态</td><td><span class="tag t-done">达成</span> 分享未生成图片</td></tr>
+  <tr><td>历史记录</td><td>本地存储 + 列表 + 清空</td><td>已实现</td><td><span class="tag t-done">达成</span></td></tr>
+  <tr><td>每日免费次数</td><td>每日 0 点重置 3 次，广告/邀请加次</td><td>试用次数 + 激活码解锁（企业微信导流）</td><td><span class="tag t-part">机制替代</span> 合规风险见 6.4</td></tr>
+  <tr><td>用户系统</td><td>微信 OAuth 登录、7 天登录态</td><td>本地账号密码（localStorage）</td><td><span class="tag t-part">模拟实现</span></td></tr>
+  <tr><td>支付系统</td><td>灵力值充值 5 档 + 礼包 + 月卡</td><td>未实现</td><td><span class="tag t-none">未实现</span></td></tr>
+  <tr><td>运营系统</td><td>任务 / 成就 / 活动 / 邀请裂变</td><td>未实现（仅有分享二维码静态展示）</td><td><span class="tag t-none">未实现</span></td></tr>
+  <tr><td>后端 / 埋点 / 风控</td><td>API 网关、数据上报、反作弊</td><td>无后端，全部前端本地完成</td><td><span class="tag t-none">未实现</span> 对单机 APP 非阻塞</td></tr>
+</table>
+<div class="callout info"><b>上架定位建议</b>：以<b>实际交付形态（六爻问卦 + 国风卦牌）</b>作为 Google Play 商品描述与内容分级的依据，不要沿用 PRD 的"抽卡/卡池概率"表述——概率性抽取 + 付费道具会触发更严格的类赌博审查，而当前实现的"摇卦显化"无随机付费，合规面更干净。</div>
+</section>
+
+<!-- ============ 4. 技术架构与资产 ============ -->
+<section id="s4">
+<h2>4. 技术架构与资产清单</h2>
+<h3>4.1 运行时架构（现状）</h3>
+<pre>┌────────────────────────────────────────────────┐
+│                移动端浏览器 / WebView            │
+│  ┌──────────────────────────────────────────┐  │
+│  │ index_0625_1906.html  (UI 结构 + 样式 +   │  │
+│  │ 书童/剧透气泡/教学层驱动脚本)              │  │
+│  ├──────────────────────────────────────────┤  │
+│  │ zhongkui-min_0625.js  (核心逻辑：起卦算法 │  │
+│  │ 题库/手势状态机/账号/历史/激活码) 已混淆   │  │
+│  ├──────────────────────────────────────────┤  │
+│  │ MediaPipe Hands ×4 CDN  (jsDelivr)        │  │
+│  │ 摄像头 getUserMedia → Hands.onResults     │  │
+│  ├──────────────────────────────────────────┤  │
+│  │ localStorage: usersDB / currentUser /     │  │
+│  │ drawHistory / 解锁标记                     │  │
+│  └──────────────────────────────────────────┘  │
+│  无后端 · 无网络请求（除 CDN 与图片）            │
+└────────────────────────────────────────────────┘</pre>
+
+<h3>4.2 工程资产清单（工作区实证）</h3>
+<table>
+  <tr><th>资产</th><th>规格 / 数量</th><th>用途</th><th>封装处理</th></tr>
+  <tr><td><code>index_0625_1906.html</code></td><td>54 KB / 704 行</td><td>主页面</td><td>打入 assets 目录</td></tr>
+  <tr><td><code>zhongkui-min_0625.js</code></td><td>62 KB，已混淆</td><td>核心逻辑</td><td>打入 assets；保留混淆前源码备份（当前工作区未见，见 R-01）</td></tr>
+  <tr><td><code>工厂2.0/</code> 1~64.webp + 背面×3</td><td>67 张，约 460~950 KB/张，合计约 44 MB</td><td>64 卦牌正反面</td><td>体积过大，必须压缩（建议缩至最长边 1080px、质量 80，预计可压至 8~12 MB）</td></tr>
+  <tr><td><code>底图.png</code></td><td>7.4 MB</td><td>全屏背景</td><td>转 WebP/压分辨率，预计 ≤1 MB</td></tr>
+  <tr><td>小红书.jpg / 抖音.png / 推特.png / 企业微信.jpg</td><td>4 张，约 200 KB</td><td>分享/导流二维码</td><td>打入 assets</td></tr>
+  <tr><td><code>问道_APP_icon+Sharecard/</code></td><td>icon 1024px / 180px + 分享卡</td><td>商店图标与分享物料</td><td>1024px 可直接用于 Play Console 高分辨率图标；需另出 512×512 与自适应图标（adaptive icon）</td></tr>
+  <tr><td><code>迭代记录.txt</code></td><td>3 个版本节点</td><td>变更历史</td><td>归档保留</td></tr>
+</table>
+
+<h3>4.3 外部依赖</h3>
+<table>
+  <tr><th>依赖</th><th>方式</th><th>封装风险</th></tr>
+  <tr><td>MediaPipe Hands（camera/control/drawing/hands 四件套）</td><td>jsDelivr CDN 运行时加载</td><td><b>高</b>：APP 内离线/弱网环境 CDN 失败则手势模式不可用 → 必须将模型与运行时全部本地化打入包内</td></tr>
+  <tr><td>og:image 分享图</td><td>GitHub Pages 外链</td><td>低：仅 H5 分享场景，APP 内可移除</td></tr>
+  <tr><td>中文衬线字体（LiSu/STKaiti/KaiTi）</td><td>系统字体栈</td><td>中：Android 无隶书字体，会回退默认字体 → 建议打包一款开源国风字体（注意字体授权）</td></tr>
+</table>
+</section>
+
+<!-- ============ 5. 封装方案 ============ -->
+<section id="s5">
+<h2>5. H5 封装 Android APP 技术方案</h2>
+<h3>5.1 方案选型</h3>
+<table>
+  <tr><th>方案</th><th>原理</th><th>摄像头手势支持</th><th>工作量</th><th>建议</th></tr>
+  <tr><td><b>Capacitor（推荐）</b></td><td>WebView 壳 + 原生桥，H5 资产打入 <code>www/</code></td><td>支持 getUserMedia，权限走原生 Camera 授权流程，行为最接近浏览器</td><td>低（1~2 天）</td><td>★ 首选：生态成熟、后续可加原生分享/推送插件</td></tr>
+  <tr><td>TWA（Trusted Web Activity）</td><td>托管 H5 + Digital Asset Links 验证</td><td>需 HTTPS 公网托管全部资产与模型</td><td>中</td><td>备选：需购置域名与托管，且依赖网络</td></tr>
+  <tr><td>原生 WebView 手写壳</td><td>自建 Activity + WebView</td><td>需自行处理 <code>onPermissionRequest</code> 授予 RESOURCE_VIDEO_CAPTURE，并处理文件访问</td><td>中</td><td>不推荐，维护成本高</td></tr>
+  <tr><td>跨端框架重写（Flutter/RN）</td><td>重写 UI 与逻辑</td><td>MediaPipe 有原生方案</td><td>高</td><td>本期不做</td></tr>
+</table>
+
+<h3>5.2 Capacitor 封装改造点（按施工顺序）</h3>
+<ol>
+  <li><b>资源本地化</b>：下载 MediaPipe Hands 运行时与 <code>.tflite/binarypb</code> 模型文件打入本地，修改 <code>Hands({locateFile})</code> 指向本地路径——这是手势模式在 APP 内可用的前提；</li>
+  <li><b>图片压缩</b>：64 张卦牌 + 底图按 4.2 节方案压缩，包体目标 ≤ 40 MB（或启用 Play Asset Delivery 分包）；</li>
+  <li><b>权限声明</b>：<code>AndroidManifest.xml</code> 声明 <code>CAMERA</code> 权限 + <code>&lt;uses-feature android:name="android.hardware.camera.front" android:required="false"/&gt;</code>（声明为非必需，保证无前置摄像头设备可安装，走点击模式降级）；</li>
+  <li><b>摄像头桥接</b>：Capacitor 下 <code>getUserMedia</code> 默认可用；需在首次进入手势模式时先调 <code>Camera.requestPermissions()</code> 原生弹窗，并给出拒绝后切点击模式的引导；</li>
+  <li><b>安全区与沉浸式</b>：代码已用 <code>env(safe-area-inset-*)</code>，WebView 端需开启 <code>android:windowLayoutInDisplayCutout</code> 并验证刘海屏；</li>
+  <li><b>返回键映射</b>：Android 物理返回键 → 页面栈回退（首页拦截退出确认），替换当前仅 UI 返回按钮的单一路径；</li>
+  <li><b>分享功能原生化</b>：结果页「请符分享」接入 Capacitor Share 插件，用 Canvas 合成卦象+判词+卦牌的分享图，替代静态二维码四宫格（二维码导流微信在 Google Play 有政策风险，见 6.4）；</li>
+  <li><b>激活码机制改造</b>：见 6.4 合规整改——移除"加微信获取激活码"路径，改为应用内正规变现或直接全免费；</li>
+  <li><b>离线可用</b>：全部资产本地化后天然离线可用，仅保留首次启动隐私政策确认页联网获取最新文本（可选）；</li>
+  <li><b>崩溃与性能埋点</b>：接入 Firebase Crashlytics + Performance（隐私安全字段，见第 7 章遥测清单），上架前需有崩溃监控能力。</li>
+</ol>
+</section>
+
+<!-- ============ 6. Google Play 合规 ============ -->
+<section id="s6">
+<h2>6. Google Play 上架合规要求</h2>
+
+<h3>6.1 商店技术与账户要求</h3>
+<table>
+  <tr><th>项目</th><th>要求（2026 年现行，以提审时 Play Console 提示为准）</th></tr>
+  <tr><td>开发者账号</td><td>Google Play Developer 账号（$25 一次性）；个人账号需完成身份验证；2023 年后注册的个人账号需 12 名测试者连续 14 天封闭测试方可转正式</td></tr>
+  <tr><td>目标 API</td><td>新应用须 target 上架时要求的最新 Android API（2026 年需 Android 16 / API 36 级别），上架前在 Console 核对当期政策</td></tr>
+  <tr><td>包格式</td><td>必须 AAB（Android App Bundle），启用 Play App Signing；包体 ≤200 MB（本项目压缩后远低于此限）</td></tr>
+  <tr><td>64 位</td><td>纯 WebView + JS 无原生 so，默认满足</td></tr>
+  <tr><td>隐私政策</td><td><b>强制</b>：因申请摄像头权限 + 本地存储用户数据，必须提供可公开访问的隐私政策 URL</td></tr>
+  <tr><td>数据安全表单</td><td>声明：摄像头（手势识别，仅本地实时处理、不上传、不存储影像）、本地账号信息（仅存设备）、无第三方共享</td></tr>
+  <tr><td>内容分级</td><td>填写 IARC 问卷；如实申报"占卜/命理娱乐"内容，建议目标分级 Everyone / Teen</td></tr>
+  <tr><td>目标受众</td><td>不得勾选 13 岁以下儿童（否则触发家庭政策，对占卜内容基本不可行）</td></tr>
+</table>
+
+<h3>6.2 占卜类内容合规红线</h3>
+<div class="callout danger">
+<ul>
+  <li>商品描述、应用内文案<b>不得承诺真实预测效力</b>，须明示"仅供娱乐"；</li>
+  <li>不得涉及赌博、现金输赢、概率性付费抽取（当前实现无付费抽取，合规面干净，保持即可）；</li>
+  <li>健康/财务等重大决策类问题（题库当前未涉及）如后续加入，需加显著免责与"不构成专业建议"提示；</li>
+  <li>应用内已出现的"本产品仅供娱乐"类声明在 APP 启动页/结果页保留并放大可见性。</li>
+</ul>
+</div>
+
+<h3>6.3 摄像头与隐私合规</h3>
+<table>
+  <tr><th>要点</th><th>现状</th><th>整改</th></tr>
+  <tr><td>权限最小化</td><td>仅用户主动选手势模式时才申请</td><td>保持；权限弹窗前展示用途说明（玩法指引已覆盖，补一页原生说明）</td></tr>
+  <tr><td>影像数据流向</td><td>MediaPipe 纯端上推理，无上传</td><td>隐私政策中明确"摄像头画面仅本地实时处理，不录制、不存储、不上传"</td></tr>
+  <tr><td>显著标识</td><td>—</td><td>手势模式下展示常驻"摄像头使用中"指示（Android 12+ 系统自带绿点之外的应用内提示）</td></tr>
+  <tr><td>儿童保护</td><td>—</td><td>目标受众声明 13+，隐私政策加未成年人条款</td></tr>
+</table>
+
+<h3>6.4 变现合规整改（最高优先级）</h3>
+<div class="callout danger">
+<b>当前"扫码加企业微信 → 人工发放激活码 → 应用内输入解锁"机制，在 Google Play 政策下属于引导用户使用应用外支付渠道解锁数字内容，违反 Google Play 结算政策（Payments Policy），提审大概率被拒，严重者下架。</b>
+</div>
+<table>
+  <tr><th>方案</th><th>说明</th><th>建议</th></tr>
+  <tr><td>A. 改为 Google Play 应用内购买</td><td>解锁完整版走 Play Billing（一次性解锁或订阅），激活码逻辑整体移除</td><td>★ 若要保留变现，唯一安全路径</td></tr>
+  <tr><td>B. 完全免费 + 站外运营</td><td>APP 全功能免费，社群导流仅放在应用外（官网/社媒资料页），应用内不出现任何导流二维码</td><td>★ 赛事期最快上线路径</td></tr>
+  <tr><td>C. 双版本</td><td>Google Play 版用方案 A/B；国内渠道版保留现有激活码玩法</td><td>工作量翻倍，仅在两线并行时考虑</td></tr>
+</table>
+<p>同理，<code>#shareModal</code> 内小红书/抖音/企业微信二维码在 Google Play 版中应移除或替换为系统分享（Capacitor Share），避免被认定为规避平台生态的站外导流。</p>
+</section>
+
+<!-- ============ 7. 发布工程 ============ -->
+<section id="s7">
+<h2>7. 发布工程：分阶段发布与稳定性预算</h2>
+
+<h3>7.1 发布轨道与阶段</h3>
+<table>
+  <tr><th>阶段</th><th>轨道</th><th>范围</th><th>通过标准（每阶段观察 ≥24h）</th></tr>
+  <tr><td>S0 冒烟</td><td>内部测试（Internal）</td><td>开发机 + 团队 ≤10 人</td><td>6 条关键旅程（见 7.3）全通过，无启动崩溃</td></tr>
+  <tr><td>S1 资格测试</td><td>封闭测试（Closed）</td><td>≥12 名测试者 × 连续 14 天（个人账号硬性要求）</td><td>崩溃率达标 + 测试者反馈无 P0/P1 问题</td></tr>
+  <tr><td>S2 灰度</td><td>正式轨道分阶段发布</td><td>10% 用户</td><td>稳定性预算达标（见 7.2）→ 扩量</td></tr>
+  <tr><td>S3 扩量</td><td>正式轨道</td><td>50% → 100%</td><td>每步 ≥24h 达标后扩量；异常则按 7.4 暂停</td></tr>
+</table>
+
+<h3>7.2 稳定性预算（ provisional 默认值，上架后按实测校准）</h3>
+<div class="grid2">
+  <div class="kpi"><b>≥99.5%</b><span>无崩溃用户率 / 24h</span></div>
+  <div class="kpi"><b>≥99.9%</b><span>无崩溃会话率 / 24h</span></div>
+  <div class="kpi"><b>≤ 基线+10%</b><span>ANR / 卡死率（不劣于基线 10%）</span></div>
+  <div class="kpi"><b>≥98%</b><span>冷启动成功率（≤5s 进入首页）</span></div>
+</div>
+<p style="margin-top:10px;">分维度监控：设备档次（RAM ≤3GB 为重点）、Android 版本（8.0+ 各档位）、手势模式 vs 点击模式、首次安装 vs 升级。</p>
+
+<h3>7.3 关键旅程（Critical Journeys）验收清单</h3>
+<ol>
+  <li>冷启动 → 首页渲染（含 44MB 压缩后图片首载性能）</li>
+  <li>点击模式完整起卦：选题 → 摇龟 → 6 掷 → 卦象 → 判词 → 入历史</li>
+  <li>手势模式完整起卦：授权 → 唤龟 → 张掌×6 → 剑指显化 → 捏合缩放卦牌</li>
+  <li>摄像头拒绝路径：拒绝授权 → 引导切点击模式 → 流程不中断</li>
+  <li>注册/登录 → 历史记录跨会话保留 → 退出登录清空</li>
+  <li>解锁/分享流程（按 6.4 选定方案改造后）</li>
+</ol>
+
+<h3>7.4 暂停 / 回滚 / 修复策略</h3>
+<table>
+  <tr><th>触发条件</th><th>动作</th></tr>
+  <tr><td>任一阶段无崩溃用户率 &lt; 99.5%，或手势模式崩溃集中爆发</td><td>Play Console 暂停分阶段发布（Halt），冻结当前百分比</td></tr>
+  <tr><td>WebView 手势模式在特定机型不可用（摄像头黑屏）</td><td>远程开关（建议留一个远程配置位）默认改走点击模式入口，发前向修复版</td></tr>
+  <tr><td>提审被拒</td><td>按 6.2/6.4 条款定位，整改后重提；不回滚已发布版本</td></tr>
+  <tr><td>严重合规事故</td><td>Play Console 下架按钮为最终手段；事前准备 forward-fix 版本</td></tr>
+</table>
+
+<h3>7.5 隐私安全遥测清单</h3>
+<ul>
+  <li>Crashlytics 自定义键<b>禁止</b>记录：用户名/密码、问题文本、卦象结果、激活码；</li>
+  <li>允许记录：页面路径、模式（点击/手势）、设备型号、Android 版本、崩溃堆栈；</li>
+  <li>摄像头帧数据零遥测——不截图、不上传、不做 breadcrumb；</li>
+  <li>数据安全表单声明与遥测实现必须一致，提审前逐条核对。</li>
+</ul>
+</section>
+
+<!-- ============ 8. 风险登记册 ============ -->
+<section id="s8">
+<h2>8. 风险登记册</h2>
+<table>
+  <tr><th>编号</th><th>风险</th><th>等级</th><th>缓解措施</th></tr>
+  <tr><td>R-01</td><td>核心逻辑仅存在混淆后的 <code>zhongkui-min_0625.js</code>，工作区未见未混淆源码，后续维护与审查几乎不可行</td><td><span class="tag t-none">高</span></td><td>立即找回/重建源码仓库，纳入 Git 管理；上架审计（如被查）需要可读代码</td></tr>
+  <tr><td>R-02</td><td>激活码 + 站外导流变现违反 Google Play 结算政策</td><td><span class="tag t-none">高</span></td><td>按 6.4 方案 A/B 整改后再提审</td></tr>
+  <tr><td>R-03</td><td>MediaPipe 依赖 CDN，封装后弱网/离线手势模式失效</td><td><span class="tag t-none">高</span></td><td>5.2 第 1 步：模型与运行时全部本地化</td></tr>
+  <tr><td>R-04</td><td>账号密码明文存 localStorage，无加密无服务端</td><td><span class="tag t-part">中</span></td><td>上架版改为：去掉密码概念（单机档案）或接 Firebase Auth；数据安全表单如实申报</td></tr>
+  <tr><td>R-05</td><td>卦牌素材合计约 44 MB，直接打包影响下载转化与启动加载</td><td><span class="tag t-part">中</span></td><td>按 4.2 压缩方案处理；或 Play Asset Delivery 按需加载</td></tr>
+  <tr><td>R-06</td><td>低端机（RAM≤3GB）摄像头 + MediaPipe 推理卡顿/发热</td><td><span class="tag t-part">中</span></td><td>按 7.2 分维度监控；检测低性能设备默认推荐点击模式</td></tr>
+  <tr><td>R-07</td><td>卦象解读文案若涉及健康/财务断言，触发内容审核</td><td><span class="tag t-part">中</span></td><td>文案全量过一遍 6.2 红线；结果页加"仅供娱乐"常驻标识</td></tr>
+  <tr><td>R-08</td><td>卡牌美术素材（工厂2.0）版权链未在文档中留痕</td><td><span class="tag t-part">中</span></td><td>补齐 AI 生成记录 / 授权文件归档，商店申诉时备用</td></tr>
+  <tr><td>R-09</td><td>个人开发者账号 14 天封闭测试硬门槛影响上线节奏</td><td><span class="tag t-info">低</span></td><td>提前招募 ≥12 名测试者排期（赛事评审可同步作为测试素材）</td></tr>
+</table>
+</section>
+
+<!-- ============ 9. Checklist ============ -->
+<section id="s9">
+<h2>9. 上架施工清单（Checklist）</h2>
+<h4>阶段一：代码整改（提审前必须完成）</h4>
+<ul>
+  <li>□ 找回/重建未混淆源码，建 Git 仓库（R-01）</li>
+  <li>□ MediaPipe 运行时 + 模型本地化，断网可用手势模式（R-03）</li>
+  <li>□ 图片资产压缩：64 卦牌 + 底图 ≤ 12 MB（R-05）</li>
+  <li>□ 移除/改造激活码与企业微信导流（6.4 选定方案 A 或 B）</li>
+  <li>□ 分享四宫格二维码 → Capacitor Share 系统分享（6.4）</li>
+  <li>□ 账号系统去明文密码（R-04）</li>
+  <li>□ "仅供娱乐"常驻声明 + 隐私政策页 + 未成年人条款（6.2/6.3）</li>
+  <li>□ 物理返回键映射与退出确认（5.2-6）</li>
+  <li>□ Firebase Crashlytics 接入，遥测字段按 7.5 白名单（7.5）</li>
+  <li>□ 国风开源字体本地化并核对授权（4.3）</li>
+</ul>
+<h4>阶段二：商店物料</h4>
+<ul>
+  <li>□ 应用名称 / 简短描述 / 完整描述（按实际"六爻问卦"定位撰写，不用"抽卡概率"表述）</li>
+  <li>□ 512×512 高分辨率图标 + 自适应图标（基于现有 icon_1024px 重出）</li>
+  <li>□ 1024×500 置顶大图（可基于分享_Sharecard.png 改版）</li>
+  <li>□ ≥2 张手机截图（建议 4~8 张：首页/问卦/手势/判词/卦志）</li>
+  <li>□ 隐私政策公开 URL（GitHub Pages / 官网均可）</li>
+  <li>□ 内容分级 IARC 问卷、目标受众 13+、数据安全表单</li>
+</ul>
+<h4>阶段三：发布</h4>
+<ul>
+  <li>□ 内部测试冒烟 → 封闭测试 12 人 × 14 天（S0/S1）</li>
+  <li>□ 正式轨道 10% 灰度，按 7.2 预算观察扩量（S2/S3）</li>
+  <li>□ 提审被拒预案与 forward-fix 版本分支（7.4）</li>
+</ul>
+</section>
+
+<!-- ============ 10. 附录 ============ -->
+<section id="s10">
+<h2>10. 附录</h2>
+<h3>10.1 项目文档清单与生命周期（Documentation Inventory）</h3>
+<table>
+  <tr><th>文档</th><th>Diátaxis 象限</th><th>责任路径</th><th>事实来源</th><th>上次验证</th><th>复核节奏</th><th>过期信号</th></tr>
+  <tr><td>公道钟馗_PRD_V1.0.md</td><td>Explanation（愿景参照）</td><td>产品负责人</td><td>产品团队（目标态，<b>非当前实现</b>）</td><td>2026-05-11</td><td>产品方向变更时</td><td>与实际代码不符且未标注</td></tr>
+  <tr><td>开发计划_公道钟馗.md</td><td>How-to（过程记录）</td><td>开发负责人</td><td>1 周 MVP 计划</td><td>2026-05-11</td><td>计划重启时</td><td>新迭代排期后</td></tr>
+  <tr><td>迭代记录.txt</td><td>Reference（变更日志）</td><td>开发负责人</td><td>版本节点实证</td><td>0625_1906</td><td>每次发版追加</td><td>新版本无记录</td></tr>
+  <tr><td><b>本文档</b></td><td>Reference + How-to（上架施工）</td><td>开发 + 上架负责人</td><td><b>index_0625_1906.html 实际代码</b></td><td>2026-10-07</td><td>90 天或触发器事件</td><td>代码基线变更 / Play 政策更新</td></tr>
+  <tr><td>隐私政策（待产出）</td><td>Reference（合规）</td><td>上架负责人</td><td>6.3 节声明口径</td><td>—</td><td>功能涉及新数据时</td><td>数据安全表单变更</td></tr>
+</table>
+
+<h3>10.2 术语速查</h3>
+<table>
+  <tr><th>术语</th><th>含义</th></tr>
+  <tr><td>六爻 / 金钱卦</td><td>三枚铜钱掷 6 次成卦，每掷得一爻（老阴/少阳/少阴/老阳），老阴老阳为动爻</td></tr>
+  <tr><td>本卦 / 变卦 / 动爻</td><td>初始卦象 / 动爻阴阳反转后的卦象 / 触发变化的爻位</td></tr>
+  <tr><td>AAB</td><td>Android App Bundle，Google Play 强制发布格式</td></tr>
+  <tr><td>Capacitor</td><td>将 Web 资产封装为原生 APP 的开源桥接方案</td></tr>
+  <tr><td>Play Billing</td><td>Google Play 应用内购买结算系统，数字内容唯一合规付费通道</td></tr>
+  <tr><td>封闭测试</td><td>个人开发者账号转正式前的强制 12 人 × 14 天测试轨道</td></tr>
+</table>
+</section>
+
+<footer>
+  公道钟馗 · 项目开发与应用文档 V1.0 ｜ 编制日期 2026-10-07 ｜ 代码基线 index_0625_1906.html<br>
+  事实来源：工作区实际代码与资产；PRD 与开发计划仅作目标参照。下次复核触发：代码基线变更、Google Play 政策更新、或距今 90 天。
+</footer>
+
+</div>
+</body>
+</html>
